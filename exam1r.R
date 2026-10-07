@@ -22,6 +22,7 @@
 #  11  Subsets / conditional means in data
 #  12  Check the OLS properties
 #  13  Concept answers (multiple choice / true-false facts)
+#  14  Concepts by study-guide topic (14.1-14.6)
 # =====================================================================
 
 
@@ -558,3 +559,119 @@ cor(x, y)^2                          # = R^2 in simple regression -> 0.96
 # Low R^2 is common in economics (many unobserved factors);
 #   it does NOT by itself mean the slope is wrong
 # reg$coefficients[1] = intercept, reg$coefficients[2] = slope
+
+
+# =====================================================================
+# 14  CONCEPTS BY STUDY-GUIDE TOPIC  (Exam I study guide, in order)
+#     Sources: study guide, Quizzes 1-6, Problem Set 7
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 14.1  FOUNDATIONS  (Days 1-3)
+# ---------------------------------------------------------------------
+# - Econometrics uses DATA to learn about ECONOMIC relationships;
+#   it combines data, economics and STATISTICS.
+# - Correlation = two variables move together. Causation = changing one
+#   causes the other to change. Correlation alone does NOT prove causation
+#   (educ-wage correlation does not prove educ causes higher wages).
+# - Confounding variable = a third factor driving BOTH variables.
+#   Ice cream sales and drownings rise together because of summer.
+# - Ceteris paribus = holding all other factors fixed.
+# - Cross-sectional data = many units at ONE time (wage1: 526 workers, 1976).
+#   Time series = ONE unit over many periods (GDP each year).
+#   Panel = the SAME units followed over time (300 firms, 2018-2023).
+# - Population = the whole group we care about (can't observe it all).
+#   Sample = the part we observe; we use it to learn about the population.
+# - sum_{i=1}^{n} x_i = x_1 + ... + x_n.  Sample mean xbar = sum(x_i) / n.
+# - Linear function y = b0 + b1 x: intercept b0 = y when x = 0;
+#   slope b1 = change in y when x rises by 1.
+# - Change: dy = b1 * dx;  two variables: dy = b1*dx1 + b2*dx2.
+#   The intercept DROPS OUT of any change.
+# - In y = b0 + b1 X1 + b2 X2, b1 = effect of X1 holding X2 fixed.
+# - Percent change = 100*(new - old)/old. Percentage-point change = new - old
+#   (for variables already in %). 4% -> 6% = 2 points = 50% increase.
+
+# ---------------------------------------------------------------------
+# 14.2  DESCRIBING DATA  (Day 4)
+# ---------------------------------------------------------------------
+# - Sample variance divides the sum of squared deviations by n - 1.
+# - Sample sd = sqrt(sample variance); measures spread in ORIGINAL units.
+# - Sign of covariance/correlation: + = move together, - = move opposite,
+#   0 = no linear relationship.
+# - Correlation always lies between -1 and 1 (+/-1 = points exactly on a line).
+# - Correlation has NO units: cor = cov / (sd_x * sd_y), so units cancel.
+#   Changing units (inches -> cm) does not change it. Covariance has units.
+
+# ---------------------------------------------------------------------
+# 14.3  PROBABILITY  (Days 5-7)
+# ---------------------------------------------------------------------
+# - ln and exp undo each other: ln(e^x) = x, e^(ln a) = a, ln(1) = 0,
+#   ln(ab) = ln a + ln b, ln(a^k) = k ln a.  R: log() = ln, exp().
+# - Random variable = value determined by chance; its distribution lists
+#   every value and its probability (probabilities sum to 1).
+# - E[X] = sum of each value times its probability.
+# - E[X^2] = sum of each SQUARED value times its probability (NOT (E[X])^2).
+# - Var(X) = E[X^2] - (E[X])^2;  sd(X) = sqrt(Var(X)).
+# - E[aX + b] = a E[X] + b;  E[aX + bY] = a E[X] + b E[Y] (always).
+# - Var(aX + b) = a^2 Var(X) (b disappears).
+# - Var(aX + bY) = a^2 Var(X) + b^2 Var(Y) + 2ab Cov(X,Y); the Cov term is
+#   there because X and Y can move together or opposite.
+# - Population Cov(X,Y) = E[XY] - E[X]E[Y];  Cor = Cov / (sd(X) sd(Y)).
+# - Independence: knowing X tells you nothing about Y; P(x,y) = P(x)P(y).
+#   Independent -> Cov = 0. But Cov = 0 does NOT imply independence
+#   (X = -1, 0, 1 and Y = X^2: Cov = 0, yet Y depends on X).
+# - E[Y | X = x] = the average of Y within the group X = x.
+#   From a table: keep the X = x rows, divide their probs by P(X = x), then sum(y * p).
+# - Conditional variance Var(Y | X = x) = the spread of Y within that group.
+# - Distributions to know: normal, t, F.
+
+# ---------------------------------------------------------------------
+# 14.4  SIMPLE LINEAR REGRESSION  (Days 8-10)
+# ---------------------------------------------------------------------
+# - Y = b0 + b1 X + U:  Y = dependent (explained) variable,
+#   X = explanatory variable, U = error term = ALL unobserved factors
+#   affecting Y (e.g. ability, family background in a wage equation).
+# - b1 = the ceteris paribus effect of X on Y (change in Y per one-unit
+#   rise in X, holding U fixed).
+# - Zero conditional mean E[U | X] = 0: the average of U does NOT depend
+#   on X (not "U is always 0"). It implies E[Y | X] = b0 + b1 X.
+# - It FAILS when something in U is related to X (ability is in U and is
+#   correlated with education).
+# - "Least squares": OLS picks b0-hat, b1-hat to minimize the SUM OF
+#   SQUARED RESIDUALS.
+# - b1-hat = cov(x, y) / var(x);  b0-hat = ybar - b1-hat * xbar.
+#   The slope has the same sign as cov(x, y).
+# - Fitted value y-hat = b0-hat + b1-hat x;  residual u-hat = y - y-hat.
+# - Negative residual = OVER-predicted;  positive residual = UNDER-predicted.
+# - Predicted change: d(y-hat) = b1-hat * dx.
+# - wage1: wage = -0.90 + 0.54 educ -> each extra year of education raises
+#   predicted hourly wage by $0.54.
+# - ceosal1: salary = 963.19 + 18.50 roe (salary in $1000s) -> +1 point of
+#   roe raises predicted salary by $18,500.
+
+# ---------------------------------------------------------------------
+# 14.5  GOODNESS OF FIT  (Days 11-12)
+# ---------------------------------------------------------------------
+# - Algebraic properties of OLS: (1) residuals sum to zero, (2) x and the
+#   residuals are uncorrelated, (3) (xbar, ybar) lies on the OLS line.
+# - SST = sum (y - ybar)^2 (total);  SSE = sum (y-hat - ybar)^2 (explained);
+#   SSR = sum u-hat^2 (unexplained).   SST = SSE + SSR.
+# - R^2 = SSE/SST = 1 - SSR/SST, between 0 and 1;
+#   = (sample correlation)^2 in simple regression.
+# - R^2 = fraction of the sample variation in y explained by x
+#   (wage1: 0.16 -> educ explains 16% of the variation in wages).
+# - Low R^2 is common in economics because many unobserved factors affect
+#   outcomes; it does NOT by itself mean the slope is wrong or useless.
+
+# ---------------------------------------------------------------------
+# 14.6  R SKILLS
+# ---------------------------------------------------------------------
+# - c() makes a vector; sum() adds; length() counts items (n).
+# - library(wooldridge) then data("wage1") loads a dataset.
+# - wage1$wage picks a column; nrow(wage1) = sample size.
+# - summary() gives min, mean, max, etc. of every variable.
+# - mean(), var(), sd(), cov(), cor() = sample statistics (n - 1).
+# - reg <- lm(y ~ x, data = DATA)  (y goes left of ~).
+# - reg$coefficients[1] = intercept, [2] = slope; $fitted.values = y-hats;
+#   $residuals = u-hats;  summary(reg)$r.squared = R^2.
+# - Save results with <- and reuse them so answers keep every decimal.
