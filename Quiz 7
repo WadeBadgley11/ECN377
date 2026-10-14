@@ -1,0 +1,222 @@
+# =====================================================================
+# ECN 377 — Reusable calculator template
+# ---------------------------------------------------------------------
+# HOW TO USE:
+#   1. Find the section that matches your question type.
+#   2. Change ONLY the numbers on the lines marked  # <-- EDIT
+#   3. Highlight that section and run it (Cmd+Enter in RStudio).
+#   The answer prints, rounded to the hundredths.
+# =====================================================================
+
+# install.packages("wooldridge")   # run once if not installed
+library(wooldridge)
+
+r2 <- function(v) round(v, 2)      # rounds to 2 decimal places
+
+
+# =====================================================================
+# 1. STANDARD DEVIATION OF aX + b
+#    Var(X) = E[X^2] - (E[X])^2
+#    sd(aX + b) = |a| * sd(X)      (b shifts, but does not spread)
+# =====================================================================
+EX  <- 1       # <-- EDIT  E[X]
+EX2 <- 37      # <-- EDIT  E[X^2]
+a   <- 3       # <-- EDIT  multiplier on X   (b doesn't matter)
+
+varX <- EX2 - EX^2
+cat("Q1-type  sd(aX+b) =", r2(abs(a) * sqrt(varX)), "\n")
+
+
+# =====================================================================
+# 2. VARIANCE OF aX + bY
+#    Var(aX + bY) = a^2 Var(X) + b^2 Var(Y) + 2ab Cov(X,Y)
+#    Careful: for 2X - 2Y, b = -2 (negative!)
+# =====================================================================
+varX <- 3      # <-- EDIT  Var(X)
+varY <- 2      # <-- EDIT  Var(Y)
+covXY <- -0.6  # <-- EDIT  Cov(X,Y)
+a <- 2         # <-- EDIT  coefficient on X
+b <- -2        # <-- EDIT  coefficient on Y (include the sign)
+
+cat("Var(aX+bY) =", r2(a^2*varX + b^2*varY + 2*a*b*covXY), "\n")
+
+
+# =====================================================================
+# 3. CORRELATION FROM A JOINT PROBABILITY TABLE
+#    Cov = E[XY] - E[X]E[Y]
+#    Cor = Cov / (sd(X) * sd(Y))
+#    Every term is weighted by its probability.
+#    (Do NOT use cor(x, y) — it ignores the probabilities.)
+# =====================================================================
+x <- c(3, 4, 6, 7)            # <-- EDIT  x column
+y <- c(7, 11, 3, 10)          # <-- EDIT  y column
+p <- c(0.2, 0.3, 0.4, 0.1)    # <-- EDIT  probability column (must sum to 1)
+
+Ex  <- sum(p * x)
+Ey  <- sum(p * y)
+cov_xy <- sum(p * x * y) - Ex * Ey
+sd_x   <- sqrt(sum(p * x^2) - Ex^2)
+sd_y   <- sqrt(sum(p * y^2) - Ey^2)
+cat("E[X] =", Ex, " E[Y] =", Ey, " Cov =", r2(cov_xy), "\n")
+cat("Cor(X,Y) =", r2(cov_xy / (sd_x * sd_y)), "\n")
+
+
+# =====================================================================
+# 4. CONDITIONAL MEAN / VARIANCE (given X = x, Y takes values ...)
+#    E[cY + d | X] = c*E[Y|X] + d
+#    Var(Y | X)    = E[Y^2|X] - (E[Y|X])^2
+# =====================================================================
+yvals <- c(4, 10, 16)         # <-- EDIT  values Y can take
+probs <- c(0.25, 0.5, 0.25)   # <-- EDIT  their probabilities
+cc <- 3; dd <- -2             # <-- EDIT  for E[3Y - 2 | X], c = 3, d = -2
+
+EY  <- sum(probs * yvals)
+cat("E[cY+d | X] =", r2(cc*EY + dd), "\n")
+cat("Var(Y | X)  =", r2(sum(probs * yvals^2) - EY^2), "\n")
+
+
+# =====================================================================
+# 5. OLS RESIDUAL OF ONE OBSERVATION (small sample)
+#    residual = actual y - fitted y
+# =====================================================================
+x <- c(2, 4, 6, 7, 8)         # <-- EDIT  x values
+y <- c(8, 10, 12, 11, 9)      # <-- EDIT  y values
+obs <- 3                      # <-- EDIT  which observation (3rd, 4th, ...)
+
+fit <- lm(y ~ x)
+print(coef(fit))              # intercept and slope, if you need them
+cat("Residual of obs", obs, "=", r2(resid(fit)[obs]), "\n")
+
+
+# =====================================================================
+# 6. MISSING RESIDUAL  (OLS residuals always sum to zero)
+# =====================================================================
+known_resids <- c(-1.2, 2.7, -0.9, -1.7, 2.7)   # <-- EDIT  the residuals you know
+cat("Missing residual =", r2(-sum(known_resids)), "\n")
+
+
+# =====================================================================
+# 7. SUM OF x_i * u_hat_i   (always 0 by OLS — no computing needed)
+#    Code below just confirms it. A result like -8.7e-15 means 0.
+# =====================================================================
+x <- c(1, 9, 11, 12, 14, 15)   # <-- EDIT
+y <- c(11, 7, 6, 8, 7, 14)     # <-- EDIT
+cat("sum(x * u_hat) =", r2(sum(x * resid(lm(y ~ x)))), "\n")
+
+
+# =====================================================================
+# 8. SUMS OF SQUARES
+#    SST = SSE + SSR,   R^2 = SSE/SST = 1 - SSR/SST
+#    (SSE = explained, SSR = residual, in this class's notation)
+# =====================================================================
+# --- 8a. Given SSE and R^2, find SSR ---
+SSE <- 98      # <-- EDIT
+R2  <- 0.26    # <-- EDIT
+SST <- SSE / R2
+cat("SST =", r2(SST), "  SSR =", r2(SST - SSE), "\n")
+
+# --- 8b. Given n and sample variance, find SST (and R^2 if SSR given) ---
+n   <- 10      # <-- EDIT  sample size
+S2y <- 28      # <-- EDIT  sample variance of y
+SSR <- NA      # <-- EDIT  put SSR here if the question gives one, else leave NA
+SST <- S2y * (n - 1)
+cat("SST =", r2(SST), "\n")
+if (!is.na(SSR)) cat("R^2 =", r2(1 - SSR/SST), "\n")
+
+
+# =====================================================================
+# 9. REAL DATA: RESIDUAL FOR A GIVEN ROW
+#    Change the dataset, y, x, and row number.
+# =====================================================================
+reg <- lm(wage ~ tenure, data = wage1)   # <-- EDIT  y ~ x, data = ...
+row <- 12                                # <-- EDIT  row number
+summary(reg)
+cat("Residual in row", row, "=", r2(reg$residuals[row]), "\n")
+
+
+# =====================================================================
+# 10. REAL DATA: SSE and % of variation explained (R^2 * 100)
+# =====================================================================
+reg <- lm(salary ~ roe, data = ceosal1)  # <-- EDIT
+yv  <- model.frame(reg)[[1]]             # the y variable used
+SSE <- sum((fitted(reg) - mean(yv))^2)
+cat("SSE =", r2(SSE), "  % explained =", r2(100 * summary(reg)$r.squared), "\n")
+
+
+# =====================================================================
+# 11. POINT (xbar, ybar) IS ON THE OLS LINE
+#     ybar = b0 + b1 * xbar
+# =====================================================================
+b0 <- 5        # <-- EDIT  intercept
+b1 <- 2.4      # <-- EDIT  slope
+xbar <- 11     # <-- EDIT  mean of x
+cat("ybar =", r2(b0 + b1 * xbar), "\n")
+
+
+# =====================================================================
+# 12. RESCALING (units changes)
+#     y multiplied by c -> b0 AND b1 multiplied by c
+#     x multiplied by c -> b1 divided by c, b0 unchanged
+#     Dividing by k is the same as multiplying by c = 1/k
+#     R^2 and correlation NEVER change from rescaling.
+# =====================================================================
+# --- 12a. y rescaled ---
+b1 <- 1.72     # <-- EDIT  original slope
+c_y <- 1000    # <-- EDIT  what y is multiplied by
+cat("New slope (y rescaled) =", r2(b1 * c_y), "\n")
+
+# --- 12b. x rescaled ---
+b1 <- 0.03     # <-- EDIT  original slope
+c_x <- 1/100   # <-- EDIT  what x is multiplied by (divide by 100 -> 1/100)
+cat("New slope (x rescaled) =", r2(b1 / c_x), "\n")
+
+# --- 12c. Real data: rescale y and rerun ---
+b <- coef(lm(salary ~ sales, data = ceosal1))["sales"]   # <-- EDIT
+c_y <- 1000                                              # <-- EDIT  thousands -> dollars
+cat("Original slope =", b, "  New slope =", r2(b * c_y), "\n")
+
+# --- 12d. Covariance after rescaling (correlation stays the same) ---
+cov_orig <- 6200   # <-- EDIT  original covariance
+c_x <- 1/1000      # <-- EDIT  dollars -> thousands of dollars
+cat("New covariance =", r2(cov_orig * c_x), " (correlation unchanged)\n")
+
+
+# =====================================================================
+# 13. LOG MODELS — interpreting the slope
+#     level-level:  dy  = b1 * dx
+#     log-level:    %dy ≈ 100 * b1 * dx
+#     level-log:    dy  ≈ (b1/100) * %dx
+#     log-log:      %dy ≈ b1 * %dx       (b1 is an elasticity)
+# =====================================================================
+b1 <- 0.02;  dx  <- 3     # <-- EDIT  log-level
+cat("log-level   %change in y =", r2(100 * b1 * dx), "\n")
+
+b1 <- 0.27;  pdx <- 7     # <-- EDIT  log-log  (pdx = % change in x)
+cat("log-log     %change in y =", r2(b1 * pdx), "\n")
+
+b1 <- 11.3;  pdx <- 13    # <-- EDIT  level-log
+cat("level-log   change in y  =", r2(b1/100 * pdx), "\n")
+
+# --- Real data log-level ---
+b <- coef(lm(log(wage) ~ exper, data = wage1))["exper"]   # <-- EDIT
+dx <- 10                                                   # <-- EDIT
+cat("Slope =", b, "  %change in wage =", r2(100 * b * dx), "\n")
+
+
+# =====================================================================
+# 14. LINEAR EQUATION CHANGE  (y = b0 + b1*X1 + b2*X2)
+#     dy = b1*dX1 + b2*dX2
+# =====================================================================
+b1 <- 1.5;  dX1 <- 4      # <-- EDIT
+b2 <- -0.8; dX2 <- -3     # <-- EDIT  (falls by 3 -> -3)
+cat("Change in y =", r2(b1*dX1 + b2*dX2), "\n")
+
+
+# =====================================================================
+# CONCEPT REMINDERS (no computing)
+# - Which line is OLS? Residuals sum to 0 AND smallest sum of squared
+#   residuals. Sum of |residuals| doesn't decide it.
+# - Zero conditional mean E[U|x]=0 FAILS if something in U (e.g. family
+#   income) is correlated with x (e.g. class size).
+# - log-log slope 0.45: a 1% rise in x -> about a 0.45% rise in y.
+# =====================================================================
