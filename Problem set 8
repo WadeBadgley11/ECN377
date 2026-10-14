@@ -1,0 +1,82 @@
+# ECN 377 — Problem Set 8
+# install.packages("wooldridge")   # run once if needed
+library(wooldridge)
+
+r2 <- function(v) round(v, 2)
+
+# Q1  Concept: family income is in U and correlated with class size,
+#     so E[U | class size] changes with class size -> ZCM fails.  (last option)
+
+# Q2  OLS: residuals sum to 0 AND smallest sum of squared residuals
+lines <- data.frame(line = c("A","B","C","D"),
+                    sum_u  = c(0, -1, 0, 0.5),
+                    sum_u2 = c(9.71, 9.00, 8.13, 8.35))
+cand <- subset(lines, sum_u == 0)
+cand$line[which.min(cand$sum_u2)]          # "C"
+
+# Q3  sd(3X - 2) = |3| * sd(X)
+EX <- 1; EX2 <- 37
+r2(3 * sqrt(EX2 - EX^2))                   # 18
+
+# Q4  Var(2X - 2Y) = 4Var(X) + 4Var(Y) + 2(2)(-2)Cov(X,Y)
+vx <- 3; vy <- 2; cxy <- -0.6
+r2(2^2*vx + (-2)^2*vy + 2*2*(-2)*cxy)      # 24.8
+
+# Q5  Correlation from a joint distribution (weight by probabilities)
+x <- c(3, 4, 6, 7); y <- c(7, 11, 3, 10); p <- c(0.2, 0.3, 0.4, 0.1)
+Ex <- sum(p*x); Ey <- sum(p*y)
+covxy <- sum(p*x*y) - Ex*Ey
+sdx <- sqrt(sum(p*x^2) - Ex^2); sdy <- sqrt(sum(p*y^2) - Ey^2)
+r2(covxy / (sdx*sdy))                      # -0.46
+
+# Q6  Residual of 3rd observation
+x <- c(2, 4, 6, 7, 8); y <- c(8, 10, 12, 11, 9)
+r2(resid(lm(y ~ x))[3])                    # 1.82
+
+# Q7  OLS residuals sum to zero
+r2(-sum(c(-1.2, 2.7, -0.9, -1.7, 2.7)))    # -1.6
+
+# Q8  sum(x_i * u_hat_i) = 0 is an OLS property
+x <- c(1, 9, 11, 12, 14, 15); y <- c(11, 7, 6, 8, 7, 14)
+r2(sum(x * resid(lm(y ~ x))))              # 0
+
+# Q9  SST = SSE / R^2, SSR = SST - SSE
+SSE <- 98; R2 <- 0.26
+r2(SSE/R2 - SSE)                           # 278.92
+
+# Q10 SST = S^2 * (n - 1)
+r2(28 * (10 - 1))                          # 252
+
+# Q11 wage1: residual for row 12
+reg <- lm(wage ~ tenure, data = wage1)
+r2(reg$residuals[12])                      # 3.14
+
+# Q12 (xbar, ybar) lies on the OLS line
+r2(5 + 2.4 * 11)                           # 31.4
+
+# Q13 y multiplied by 1000 -> slope multiplied by 1000
+r2(1.72 * 1000)                            # 1720
+
+# Q14 x divided by 100 -> slope multiplied by 100
+r2(0.03 * 100)                             # 3
+
+# Q15 Concept: x*10 -> slope/10, intercept unchanged, R^2 unchanged (last option)
+
+# Q16 ceosal1: salary in dollars -> slope * 1000
+b <- coef(lm(salary ~ sales, data = ceosal1))["sales"]
+r2(b * 1000)                               # 15.47
+
+# Q17 log-level: %dy = 100 * b1 * dx
+r2(100 * 0.02 * 3)                         # 6
+
+# Q18 log-log: %dy = b1 * %dx
+r2(0.27 * 7)                               # 1.89
+
+# Q19 level-log: dy = (b1/100) * %dx
+r2(11.3/100 * 13)                          # 1.47
+
+# Q20 Concept: elasticity -> 1% rise in income ~ 0.45% rise in rent
+
+# Q21 wage1 log-level: %dwage = 100 * b1 * 10
+b <- coef(lm(log(wage) ~ exper, data = wage1))["exper"]
+r2(100 * b * 10)                           # 4.36
