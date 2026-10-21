@@ -1,0 +1,196 @@
+###############################################################################
+#  QUIZ 8 SOLVER  —  ECN-377  (PS8 #14, 17, 19  +  PS9 #1, 5, 6, 9, 13-16)
+#
+#  HOW TO USE:
+#   1. Find the section matching the quiz question.
+#   2. Change the numbers in the "PLUG IN" lines to match your quiz.
+#   3. Highlight the section and run it (Cmd+Enter in RStudio).
+#   4. The answer prints, already rounded to the hundredths.
+###############################################################################
+
+r2 <- function(x) round(x, 2)   # round to hundredths
+
+# =============================================================================
+# PS8 #14 — RESCALING x (divide or multiply every x by a number)
+# -----------------------------------------------------------------------------
+# Rule: if x is MULTIPLIED by c, the slope is multiplied by 1/c.
+#       if x is DIVIDED   by k, the slope is MULTIPLIED by k.
+#       The intercept and R^2 do not change.
+# =============================================================================
+rescale_x_slope <- function(b1, divide_by = NULL, multiply_by = NULL) {
+  if (!is.null(divide_by))   return(r2(b1 * divide_by))
+  if (!is.null(multiply_by)) return(r2(b1 / multiply_by))
+  stop("Give divide_by OR multiply_by")
+}
+
+# ---- PLUG IN ----
+b1        <- 0.03   # original slope
+divisor   <- 100    # every x divided by this
+cat("PS8 #14  New slope =", rescale_x_slope(b1, divide_by = divisor), "\n")
+# If the quiz says x is MULTIPLIED instead, use:
+# rescale_x_slope(b1, multiply_by = 10)
+
+# Bonus (rescaling y): if y is multiplied by c, slope AND intercept are multiplied by c.
+rescale_y_slope <- function(b1, multiply_by) r2(b1 * multiply_by)
+# e.g. salary in thousands -> dollars:  rescale_y_slope(0.01547, 1000)  -> 15.47
+
+
+# =============================================================================
+# PS8 #17 — LOG-LEVEL:  log(y) = b0 + b1*x
+# -----------------------------------------------------------------------------
+# Rule: %Δy ≈ 100 * b1 * Δx
+# =============================================================================
+log_level <- function(b1, dx) r2(100 * b1 * dx)
+
+# ---- PLUG IN ----
+b1 <- 0.02   # slope on x
+dx <- 3      # how much x rises (units)
+cat("PS8 #17  %Δy ≈", log_level(b1, dx), "%\n")
+
+
+# =============================================================================
+# PS8 #19 — LEVEL-LOG:  y = b0 + b1*log(x)
+# -----------------------------------------------------------------------------
+# Rule: Δy ≈ (b1 / 100) * %Δx
+# =============================================================================
+level_log <- function(b1, pct_dx) r2((b1 / 100) * pct_dx)
+
+# ---- PLUG IN ----
+b1     <- 11.3   # slope on log(x)
+pct_dx <- 13     # % rise in x
+cat("PS8 #19  Δy ≈", level_log(b1, pct_dx), "units\n")
+
+
+# =============================================================================
+# EXTRA (in case it shows up) — LOG-LOG:  log(y) = b0 + b1*log(x)
+# -----------------------------------------------------------------------------
+# Rule: %Δy ≈ b1 * %Δx   (b1 is an elasticity)
+# =============================================================================
+log_log <- function(b1, pct_dx) r2(b1 * pct_dx)
+# e.g. log_log(0.27, 7) -> 1.89
+
+
+###############################################################################
+#                               PROBLEM SET 9
+###############################################################################
+
+# =============================================================================
+# PS9 #1 — RESCALING y IN A LOG-LOG MODEL  (multiple choice)
+# -----------------------------------------------------------------------------
+# log(c*y) = log(c) + log(y)  -> only the INTERCEPT changes (by + log(c)).
+# The slope b1 is a % effect, so it does NOT change.
+#
+# ANSWER: "b1 does not change; only b0 changes."
+#
+# Bonus: new intercept = old b0 + log(c)
+#   e.g. salary thousands -> dollars:  4.93 + log(1000) = 11.84
+# =============================================================================
+new_intercept_log_y <- function(b0, multiply_by) r2(b0 + log(multiply_by))
+cat("PS9 #1  (bonus) new intercept =", new_intercept_log_y(4.93, 1000), "\n")
+
+
+# =============================================================================
+# PS9 #5 — LOG-LOG WITH A FALL IN x
+# -----------------------------------------------------------------------------
+# Rule: %Δy ≈ b1 * %Δx   — a FALL means %Δx is NEGATIVE
+# =============================================================================
+# ---- PLUG IN ----
+b1     <- 0.23
+pct_dx <- -2        # "falls by 2%"  ->  -2
+cat("PS9 #5  %Δy ≈", log_log(b1, pct_dx), "%\n")
+
+
+# =============================================================================
+# PS9 #6 — LOG-LEVEL WITH REAL DATA (ceosal1)
+# -----------------------------------------------------------------------------
+# Run the regression, grab the UNROUNDED slope, then %Δy ≈ 100 * b1 * Δx
+# =============================================================================
+# install.packages("wooldridge")   # run once if you don't have it
+library(wooldridge)
+data("ceosal1")
+
+reg6 <- lm(log(salary) ~ roe, data = ceosal1)
+b1_6 <- coef(reg6)["roe"]           # unrounded slope (≈ 0.013863)
+
+# ---- PLUG IN ----
+d_roe <- 5                           # roe rises by this many points
+cat("PS9 #6  slope =", b1_6, " ->  %Δsalary ≈", log_level(b1_6, d_roe), "%\n")
+
+# If the quiz swaps to the LEVEL-LOG version (salary ~ log(sales)):
+# reg7 <- lm(salary ~ log(sales), data = ceosal1)
+# level_log(coef(reg7)[2], 10)      # change in $ thousands for a 10% rise in sales
+
+
+# =============================================================================
+# PS9 #9 — OMITTED-VARIABLE BIAS  (multiple choice)
+# -----------------------------------------------------------------------------
+# OVB needs a variable that (1) affects y AND (2) is correlated with x.
+#
+# ANSWER: "The worker's ability, which raises wages and tends to be higher
+#          for people with more education."
+# (ID numbers, random numbers, day of week are unrelated -> no bias.)
+# =============================================================================
+
+
+# =============================================================================
+# PS9 #13 — WHAT MAKES Var(b1) SMALLER?  (multiple choice)
+# -----------------------------------------------------------------------------
+# Var(b1) = sigma^2 / SST_x
+#   smaller sigma^2  -> smaller variance
+#   bigger SST_x (more spread in x, or bigger n) -> smaller variance
+#   intercept has nothing to do with it
+#
+# ANSWER: "More spread-out values of X (a larger SST_x)."
+# =============================================================================
+
+
+# =============================================================================
+# PS9 #14 — sd(b1) FROM A LIST OF x VALUES
+# -----------------------------------------------------------------------------
+# SST_x = sum((x - mean(x))^2),   sd(b1) = sigma / sqrt(SST_x)
+# =============================================================================
+# ---- PLUG IN ----
+sigma <- 5
+x     <- c(4, 5, 6, 7, 9)
+
+SST_x <- sum((x - mean(x))^2)
+cat("PS9 #14  SST_x =", SST_x, " ->  sd(b1) =", r2(sigma / sqrt(SST_x)), "\n")
+
+# Variants that may show up:
+#   Var(b1) = sigma^2 / SST_x                 -> r2(80 / 17)
+#   SST_x from n and sample var: (n-1)*S2     -> r2(9 / sqrt((8 - 1) * 5))
+
+
+# =============================================================================
+# PS9 #15 — ESTIMATE OF ERROR VARIANCE
+# -----------------------------------------------------------------------------
+# sigma_hat^2 = SSR / (n - 2)      (divide by n-2, NOT n or n-1)
+# =============================================================================
+# ---- PLUG IN ----
+n   <- 20
+SSR <- 388
+cat("PS9 #15  sigma_hat^2 =", r2(SSR / (n - 2)), "\n")
+
+
+# =============================================================================
+# PS9 #16 — STANDARD ERROR OF b1
+# -----------------------------------------------------------------------------
+# sigma_hat = sqrt(SSR / (n - 2)),   se(b1) = sigma_hat / sqrt(SST_x)
+# =============================================================================
+# ---- PLUG IN ----
+n     <- 8
+SSR   <- 457
+SST_x <- 13
+
+sigma_hat <- sqrt(SSR / (n - 2))
+cat("PS9 #16  sigma_hat =", r2(sigma_hat), " ->  se(b1) =", r2(sigma_hat / sqrt(SST_x)), "\n")
+
+
+###############################################################################
+#  QUICK ANSWER KEY (with the problem-set numbers)
+#   PS8 #14  3        PS8 #17  6        PS8 #19  1.47
+#   PS9 #1   b1 same, only b0 changes
+#   PS9 #5   -0.46    PS9 #6   6.93
+#   PS9 #9   ability  PS9 #13  more spread-out X (larger SST_x)
+#   PS9 #14  1.30     PS9 #15  21.56    PS9 #16  2.42
+###############################################################################
