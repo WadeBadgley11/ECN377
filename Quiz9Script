@@ -1,0 +1,106 @@
+############################################################
+#  QUIZ 9 SOLVER  (Problems 1, 2, 3, 4, 6, 7, 9, 12, 13, 14, 15)
+#
+#  HOW TO USE:
+#   1. Run the SETUP block once.
+#   2. Find the problem that matches your quiz question.
+#   3. Change the numbers in the "PLUG IN" lines.
+#   4. Highlight that section and press Ctrl+Enter (Cmd+Enter on Mac).
+#   5. The answer prints in the Console.
+############################################################
+
+
+# ================= SETUP (run once) ======================
+# install.packages("wooldridge")   # run only if not installed
+library(wooldridge)  # loads bwght and wage1 data
+
+
+# ================= PROBLEM 1 (multiple choice) ===========
+# Level-log model:  y = b0 + b1*log(x)
+# A 1% rise in x changes y by b1/100 UNITS (not percent).
+b1 <- 8          # PLUG IN: coefficient on log(x)
+b1 / 100         # change in y per 1% rise
+# ANSWER: "A 1% rise in income ... rise of about 0.08 points"
+
+
+# ================= PROBLEM 2 (log-level) =================
+# log(y) = b0 + b1*x  ->  %change in y = 100 * b1 * change in x
+b1      <- 0.08  # PLUG IN: coefficient on x
+delta_x <- -2    # PLUG IN: change in x (falls = negative)
+round(100 * b1 * delta_x, 2)   # percent change in y
+# ANSWER: -16
+
+
+# ================= PROBLEM 3 (log-log, bwght data) =======
+# log(y) = b0 + b1*log(x)  ->  %change y = b1 * %change x
+pct_change_x <- 20   # PLUG IN: % change in faminc
+reg3 <- lm(log(bwght) ~ log(faminc), data = bwght)  # runs log-log regression
+b1 <- coef(reg3)[2]                                 # elasticity (slope)
+round(b1 * pct_change_x, 2)                         # % change in bwght
+# ANSWER: 0.41
+
+
+# ================= PROBLEM 4 (multiple choice) ===========
+# Unbiased means E(b1_hat) = b1, estimates still vary.
+# ANSWER: "The average of the 1,000 estimates is close to beta_1."
+
+
+# ================= PROBLEM 6 (select all) ================
+# Var(b1_hat) = sigma^2 / SST_X
+# Larger when sigma^2 goes UP or SST_X goes DOWN.
+# ANSWERS (check these three):
+#   - A smaller sample (smaller SST_X)
+#   - A larger error variance sigma^2
+#   - X values bunched more tightly (smaller SST_X)
+# NOT: larger true slope, larger sample
+
+
+# ================= PROBLEM 7 (se from sd of X) ===========
+n         <- 8     # PLUG IN: number of observations
+sigma_hat <- 5.9   # PLUG IN: sigma hat
+S_X       <- 2.1   # PLUG IN: standard deviation of X
+SST_X <- (n - 1) * S_X^2              # total variation in X
+round(sigma_hat / sqrt(SST_X), 2)     # standard error of b1
+# ANSWER: 1.06
+
+
+# ================= PROBLEM 9 (scale sample size) =========
+sd_b1 <- 1.09   # PLUG IN: current sd of b1 hat
+k     <- 16     # PLUG IN: times larger sample
+round(sd_b1 / sqrt(k), 2)   # new sd shrinks by sqrt(k)
+# ANSWER: 0.27
+
+
+# ================= PROBLEM 12 (predict y, 2 x's) =========
+b0 <- 10;  b1 <- 2.5;  b2 <- 2.3   # PLUG IN: coefficients
+x1 <- 13;  x2 <- 15                # PLUG IN: x values
+round(b0 + b1*x1 + b2*x2, 2)       # predicted y
+# ANSWER: 77
+
+
+# ================= PROBLEM 13 (change in y) ==============
+b1 <- 3.1;  b2 <- -2.3    # PLUG IN: slopes (keep signs!)
+dx1 <- 5;   dx2 <- 3      # PLUG IN: changes in x1, x2
+round(b1*dx1 + b2*dx2, 2) # change in y (intercept ignored)
+# ANSWER: 8.6
+
+
+# ================= PROBLEM 14 (wage1 prediction) =========
+educ_val   <- 14   # PLUG IN: years of education
+exper_val  <- 10   # PLUG IN: years of experience
+tenure_val <- 5    # PLUG IN: years of tenure
+reg14 <- lm(wage ~ educ + exper + tenure, data = wage1)  # runs wage regression
+b <- reg14$coefficients                                  # saves coefficients
+round(b[1] + b[2]*educ_val + b[3]*exper_val + b[4]*tenure_val, 2)  # predicted wage
+# ANSWER: 6.58
+
+
+# ================= PROBLEM 15 (wage1 tenure change) ======
+delta_tenure <- 3   # PLUG IN: change in tenure
+reg15 <- lm(wage ~ educ + exper + tenure, data = wage1)  # same regression
+b <- reg15$coefficients                                  # saves coefficients
+round(b[4] * delta_tenure, 2)   # change in wage, others fixed
+# ANSWER: 0.51
+#
+# Quiz variation? Change educ/exper instead:
+#   b[2] * change_in_educ   or   b[3] * change_in_exper
