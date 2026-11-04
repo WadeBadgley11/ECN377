@@ -1,0 +1,107 @@
+############################################################
+#  QUIZ 10 SOLVER  (Problems 1, 2, 3, 4, 6, 7, 9, 11, 14, 16, 17)
+#
+#  HOW TO USE:
+#   1. Run the SETUP block once.
+#   2. Find the problem that matches your quiz question.
+#   3. Change the numbers on the "PLUG IN" lines.
+#   4. Highlight that section and press Cmd+Enter (Ctrl+Enter on Windows).
+#   5. The answer prints in the Console.
+############################################################
+
+
+# ================= SETUP (run once) ======================
+# install.packages("wooldridge")   # run only if not installed
+library(wooldridge)  # loads wage1 and bwght data
+
+
+# ================= PROBLEM 1 (log-level, two x's) ========
+# %change y = 100 * (b1*dx1 + b2*dx2)
+b1  <- 0.034;  b2  <- -0.014   # PLUG IN: slopes (keep signs!)
+dx1 <- 4;      dx2 <- 3        # PLUG IN: changes (falls = negative)
+round(100 * (b1*dx1 + b2*dx2), 2)   # percent change in y
+# ANSWER: 9.4
+
+
+# ================= PROBLEM 2 (wage1, % change) ===========
+d_educ   <- 0   # PLUG IN: change in educ
+d_exper  <- 2   # PLUG IN: change in exper
+d_tenure <- 1   # PLUG IN: change in tenure
+reg <- lm(log(wage) ~ educ + exper + tenure, data = wage1)  # log-level regression
+b <- reg$coefficients                                        # saves coefficients
+round(100 * (b[2]*d_educ + b[3]*d_exper + b[4]*d_tenure), 2) # percent change in wage
+# ANSWER: 3.03
+
+
+# ================= PROBLEM 3 (wage1, predicted wage) =====
+educ_val <- 12;  exper_val <- 10;  tenure_val <- 3   # PLUG IN: worker values
+reg <- lm(log(wage) ~ educ + exper + tenure, data = wage1)  # same regression
+b <- reg$coefficients                                        # saves coefficients
+round(exp(b[1] + b[2]*educ_val + b[3]*exper_val + b[4]*tenure_val), 2)  # undo log
+# ANSWER: 4.46
+
+
+# ================= PROBLEM 4 (select all) ================
+# Residual properties that are ALWAYS true:
+#   [x] Sample average of residuals is 0
+#   [x] Sample covariance between each Xj and residuals is 0
+#   [x] Regression passes through the point of sample means
+#   [ ] Covariance between Y and residuals is 0   (FALSE, it's fitted values)
+#   [ ] Every residual is 0 in large samples       (FALSE)
+
+
+# ================= PROBLEM 6 (mean of y) =================
+b0 <- 4.1;  b1 <- 1.7;  b2 <- -2.1   # PLUG IN: coefficients
+xbar1 <- 11.8;  xbar2 <- 7.1         # PLUG IN: sample means
+round(b0 + b1*xbar1 + b2*xbar2, 2)   # line passes through means
+# ANSWER: 9.25
+
+
+# ================= PROBLEM 7 (select all, MLR3) ==========
+# MLR3 fails with an EXACT linear relationship or n too small:
+#   [x] wage on income in dollars AND income in thousands
+#   [x] voteA on expendA, expendB, totexpend (= expendA + expendB)
+#   [x] 5 independent variables on only 4 observations
+#   [ ] educ and exper both vary          (fine)
+#   [ ] ACT and hsGPA correlated, not perfectly (fine)
+
+
+# ================= PROBLEM 9 (multiple choice) ===========
+# MLR4 fails from omitted variables or wrong functional form.
+# ANSWER: "A variable that affects Y and is correlated with X1
+#          is left out of the regression."
+
+
+# ================= PROBLEM 11 (formula 3.23) =============
+# simple = multiple + b2*delta1   ->   multiple = simple - b2*delta1
+b1_simple <- 0.79    # PLUG IN: simple-regression slope (beta tilde)
+b2        <- -1.24   # PLUG IN: beta2 hat
+delta1    <- 0.49    # PLUG IN: delta1 tilde
+round(b1_simple - b2*delta1, 2)   # multiple-regression slope
+# ANSWER: 1.40
+# If the quiz asks for the SIMPLE slope instead:  b1_multiple + b2*delta1
+
+
+# ================= PROBLEM 14 (bwght, b2 * delta1) =======
+reg_mult <- lm(bwght ~ cigs + faminc, data = bwght)  # multiple regression
+reg_aux  <- lm(faminc ~ cigs, data = bwght)          # omitted var on included
+b2     <- coef(reg_mult)["faminc"]                   # faminc coefficient
+delta1 <- coef(reg_aux)["cigs"]                      # cigs slope
+round(b2 * delta1, 2)                                # bias piece
+# ANSWER: -0.05
+# Check: simple cigs slope minus multiple cigs slope
+coef(lm(bwght ~ cigs, data = bwght))["cigs"] - coef(reg_mult)["cigs"]
+
+
+# ================= PROBLEMS 16 & 17 (sign of bias) =======
+# Bias = sign(beta2) * sign(delta1)
+#   beta2  = effect of omitted X2 on Y     (+1 raises, -1 lowers)
+#   delta1 = correlation of X2 with X1     (+1 positive, -1 negative)
+beta2_sign  <- -1   # PLUG IN: +1 or -1   (Problem 16: X2 lowers Y)
+delta1_sign <- -1   # PLUG IN: +1 or -1   (Problem 16: negatively correlated)
+bias <- beta2_sign * delta1_sign
+if (bias > 0) "biased UPWARD (overstates)" else "biased DOWNWARD (understates)"
+# If either leg is 0 -> UNBIASED
+# ANSWER 16: biased upward
+# ANSWER 17: land raises yield (+1), more fertilizer on good land (+1)
+#            -> overstates the effect of fertilizer (upward bias)
