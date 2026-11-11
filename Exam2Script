@@ -1,0 +1,426 @@
+# =====================================================================
+#  ECN 377 — EXAM II TOOLKIT  (Wade Badgley)
+# =====================================================================
+#  HOW TO USE
+#   - Run lines 1-20 once (library + helper) at the start of the exam.
+#   - Find the block that matches the question: Cmd+F a word from the
+#     question (e.g. "log-log", "residual", "se(", "omit", "SST").
+#   - Each block is pre-filled with a REAL example from a quiz / problem set.
+#     "ANSWER:" = the graded correct answer, so you know the block works.
+#   - Change ONLY the numbers in the "<- change these" lines, highlight the
+#     block, and press Cmd+Enter. The rounded answer prints.
+#   - Concept (multiple-choice) answers are in PART G at the bottom.
+#
+#  CONTENTS
+#   PART A  Probability / before Exam I
+#   PART B  Units, rescaling, log models
+#   PART C  Simple regression: residuals, R^2, Var(b1), se(b1)
+#   PART D  Multiple regression: predictions, changes, point of means
+#   PART E  Omitted-variable bias
+#   PART F  Multiple regression standard errors (Problem Set 12)
+#   PART G  CONCEPT / MULTIPLE-CHOICE answers
+# =====================================================================
+
+library(wooldridge)
+r <- function(x) round(x, 2)   # rounds to the hundredths
+
+
+# =====================================================================
+# PART A — PROBABILITY / BEFORE EXAM I
+# =====================================================================
+
+# ---- A1. JOINT TABLE: find Cor(X,Y) (or Cov, E, Var) ----------------
+# Example: x=3,4,6,7  y=7,11,3,10  P=.2,.3,.4,.1   ANSWER: Cor = -0.46
+x <- c(3, 4, 6, 7)          # <- change these
+y <- c(7, 11, 3, 10)        # <- change these
+p <- c(0.2, 0.3, 0.4, 0.1)  # <- change these
+EX <- sum(x*p); EY <- sum(y*p)
+VX <- sum(x^2*p) - EX^2; VY <- sum(y^2*p) - EY^2
+CovXY <- sum(x*y*p) - EX*EY
+r(c(EX=EX, EY=EY, VarX=VX, VarY=VY, sdX=sqrt(VX), sdY=sqrt(VY), Cov=CovXY, Cor=CovXY/sqrt(VX*VY)))
+
+# ---- A2. ONE-VARIABLE TABLE: E[X], Var(X), sd(X) --------------------
+x <- c(1, 2, 3)        # <- values
+p <- c(0.2, 0.5, 0.3)  # <- probabilities
+EX <- sum(x*p); VX <- sum(x^2*p) - EX^2
+r(c(EX=EX, VarX=VX, sdX=sqrt(VX)))
+
+# ---- A3. "E[X]=1 and E[X^2]=37. Find sd of 3X - 2" -------------------
+# Var(X) = E[X^2] - (E[X])^2 ;  sd(aX+b) = |a| sd(X) ; the +b does nothing
+# ANSWER: 18
+EX <- 1; EX2 <- 37; a <- 3          # <- change these
+VX <- EX2 - EX^2
+r(c(VarX=VX, Var_aXb=a^2*VX, sd_aXb=abs(a)*sqrt(VX)))
+
+# ---- A4. "Var(X)=3, Var(Y)=2, Cov=-0.6. Find Var(2X - 2Y)" -----------
+# Var(aX+bY) = a^2 VarX + b^2 VarY + 2ab Cov  (b is NEGATIVE for minus)
+# ANSWER: 24.8
+VX <- 3; VY <- 2; CovXY <- -0.6; a <- 2; b <- -2   # <- change these
+r(a^2*VX + b^2*VY + 2*a*b*CovXY)
+
+# ---- A5. Sample mean, sample sd, variance, SST of numbers ------------
+v <- c(2, 4, 6, 7, 8)   # <- change these
+r(c(n=length(v), mean=mean(v), sd=sd(v), var=var(v), SST=sum((v-mean(v))^2)))
+
+# ---- A6. Mean / sd WITHIN A GROUP of a dataset -----------------------
+# e.g. average wage of women in wage1
+r(mean(wage1$wage[wage1$female == 1]))
+r(sd(wage1$wage[wage1$female == 1]))
+# general: mean(DATA$VAR[DATA$GROUP == VALUE], na.rm = TRUE)
+
+# Facts: Var(X + b) = Var(X).  Population quantity (mu_Y) = fixed number.
+#        Sample statistic (Y-bar) = random variable (changes sample to sample).
+
+
+# =====================================================================
+# PART B — UNITS, RESCALING, LOG MODELS
+# =====================================================================
+#  Rules:  y times c  -> b0 and b1 both times c
+#          x times c  -> b1 divided by c, b0 unchanged      ("x divided by 100" means c = 1/100)
+#          R^2 never changes with units
+#          log(y) model, y times c -> slope same, intercept + log(c)
+#          log-log model: units change only the intercept
+
+# ---- B1. "Every y multiplied by 1,000. New slope?"  ANSWER: 1720 ------
+b1 <- 1.72; c <- 1000                 # <- change these
+r(b1 * c)
+
+# ---- B2. "Every x divided by 100. New slope?"  ANSWER: 3 --------------
+b1 <- 0.03; c <- 1/100                # <- c = what x is MULTIPLIED by
+r(b1 / c)
+
+# ---- B3. "log(salary)=4.93+... salary in dollars instead of thousands. New intercept?" ANSWER: 11.84
+b0 <- 4.93; c <- 1000                 # <- change these
+r(b0 + log(c))
+
+# ---- B4. LOG-LEVEL  log(y) = b0 + b1 x :  %dy = 100 * b1 * dx --------
+# "log(y)=1.4+0.02x, x rises by 3"  ANSWER: 6      (falls -> dx negative)
+b1 <- 0.02; dx <- 3                   # <- change these
+r(100 * b1 * dx)
+# months -> year: "slope 0.0063 per month, one more YEAR" -> dx = 12. ANSWER: 7.56
+
+# ---- B5. LOG-LOG  log(y) = b0 + b1 log(x) :  %dy = b1 * %dx ----------
+# "log(y)=1.2+0.27log(x), x rises by 7%"  ANSWER: 1.89   (x falls 2% -> pct_dx = -2)
+b1 <- 0.27; pct_dx <- 7               # <- change these
+r(b1 * pct_dx)
+
+# ---- B6. LEVEL-LOG  y = b0 + b1 log(x) :  dy = (b1/100) * %dx --------
+# "y=87+11.3log(x), x rises 13%"  ANSWER: 1.47
+b1 <- 11.3; pct_dx <- 13              # <- change these
+r(b1 / 100 * pct_dx)
+
+# ---- B7. DATA versions (change dataset / variables / numbers) --------
+# log-level: lm(log(salary) ~ roe, ceosal1), roe rises 5   ANSWER: 6.93
+reg <- lm(log(salary) ~ roe, data = ceosal1)
+r(100 * coef(reg)[2] * 5)
+# log-level: lm(log(wage) ~ exper, wage1), 10 more years   ANSWER: 4.36
+reg <- lm(log(wage) ~ exper, data = wage1)
+r(100 * coef(reg)[2] * 10)
+# level-log: lm(salary ~ log(sales), ceosal1), sales rise 10%   ANSWER: 26.29
+reg <- lm(salary ~ log(sales), data = ceosal1)
+r(coef(reg)[2] / 100 * 10)
+# log-log: lm(log(bwght) ~ log(faminc), bwght), income rises 20%   ANSWER: 0.41
+reg <- lm(log(bwght) ~ log(faminc), data = bwght)
+r(coef(reg)[2] * 20)
+# rescale with data: salary in dollars instead of thousands   ANSWER: 15.47
+reg <- lm(salary ~ sales, data = ceosal1)
+r(coef(reg)[2] * 1000)
+
+
+# =====================================================================
+# PART C — SIMPLE REGRESSION: residuals, R^2, Var(b1), se(b1)
+# =====================================================================
+
+# ---- C1. "Residuals are -1.2, 2.7, ... and one more. Sixth residual?" ANSWER: -1.6
+known <- c(-1.2, 2.7, -0.9, -1.7, 2.7)   # <- change these
+r(-sum(known))
+# "Compute sum of x_i * u-hat_i"  -> ALWAYS 0 (OLS property). Also sum of u-hat = 0.
+
+# ---- C2. "SSE=98 and R^2=0.26. Find SSR"  ANSWER: 278.92 --------------
+SSE <- 98; R2 <- 0.26                    # <- change these
+SST <- SSE / R2; r(c(SST=SST, SSR=SST - SSE))
+# (if given SSR and R^2: SST = SSR/(1-R2), SSE = SST - SSR)
+
+# ---- C3. "n=10, sample variance 28. Find SST"  ANSWER: 252 -----------
+n <- 10; S2 <- 28                        # <- if given sd, use S2 <- sd^2
+r((n - 1) * S2)
+
+# ---- C4. "b0=5, b1=2.4, mean of x = 11. Mean of y?"  ANSWER: 31.4 ------
+b0 <- 5; b1 <- 2.4; xbar <- 11           # <- change these
+r(b0 + b1 * xbar)
+
+# ---- C5. Residual of observation i from typed-in data  ANSWER: 1.82 ---
+x <- c(2, 4, 6, 7, 8); y <- c(8, 10, 12, 11, 9); i <- 3   # <- change these
+reg <- lm(y ~ x); r(resid(reg)[i])
+
+# ---- C6. Residual of row 12 in a dataset  ANSWER: 3.14 ----------------
+reg <- lm(wage ~ tenure, data = wage1); r(reg$residuals[12])
+
+# ---- C7. Var(b1) = sigma^2 / SST_X  ("sigma^2=80, SST=17")  ANSWER: 4.71
+sigma2 <- 80; SST <- 17                  # <- change these (sigma given? square it)
+r(c(Var_b1 = sigma2/SST, sd_b1 = sqrt(sigma2/SST)))
+
+# ---- C8. sd(b1) with sigma, n, S_X^2  ("sigma=9, n=8, S2=5") ANSWER: 1.52
+sigma <- 9; n <- 8; S2 <- 5              # <- change these
+r(sigma / sqrt((n - 1) * S2))
+
+# ---- C9. sd(b1) with sigma and the x values  ANSWER: 1.3 --------------
+sigma <- 5; x <- c(4, 5, 6, 7, 9)        # <- change these
+r(sigma / sqrt(sum((x - mean(x))^2)))
+
+# ---- C10. sigma^2-hat = SSR/(n-2)  ("n=20, SSR=388")  ANSWER: 21.56 ---
+SSR <- 388; n <- 20                      # <- change these
+r(SSR / (n - 2))
+
+# ---- C11. se(b1) from SSR, n, SST_X  ("n=8, SSR=457, SST=13") ANSWER: 2.42
+SSR <- 457; n <- 8; SST <- 13            # <- change these
+sig <- sqrt(SSR / (n - 2)); r(c(sigma_hat = sig, se_b1 = sig / sqrt(SST)))
+
+# ---- C12. se(b1) from sigma-hat, n, SD of X  ("n=8, sigma-hat=5.9, S_X=2.1") ANSWER: 1.06
+sig <- 5.9; n <- 8; SX <- 2.1            # <- change these (SD, it gets squared)
+r(sig / sqrt((n - 1) * SX^2))
+
+# ---- C13. se(b1) from x values and SSR  ("x=2,3,4,5,9, SSR=62") ANSWER: 0.84
+x <- c(2, 3, 4, 5, 9); SSR <- 62         # <- change these
+sig <- sqrt(SSR / (length(x) - 2)); r(sig / sqrt(sum((x - mean(x))^2)))
+
+# ---- C14. "Sample 16 times as large, sd(b1)=1.09. New sd?"  ANSWER: 0.27
+sd_old <- 1.09; k <- 16                  # <- change these
+r(sd_old / sqrt(k))
+
+# ---- C15. se(b1) BY HAND from a dataset  (ceosal1 salary ~ roe) ANSWER: 11.12
+reg <- lm(salary ~ roe, data = ceosal1)  # <- change formula / data
+x <- ceosal1$roe                         # <- the x variable
+sig <- sqrt(sum(reg$residuals^2) / (nobs(reg) - 2))
+r(c(sigma_hat = sig, SST_x = sum((x - mean(x))^2),
+    se_by_hand = sig / sqrt(sum((x - mean(x))^2)),
+    se_summary = summary(reg)$coefficients[2, 2]))
+# sigma-hat of wage ~ educ in wage1  ANSWER: 3.38 ; SST of educ  ANSWER: 4025.43
+reg <- lm(wage ~ educ, data = wage1)
+r(c(sigma_hat = summary(reg)$sigma, SST_educ = sum((wage1$educ - mean(wage1$educ))^2)))
+
+
+# =====================================================================
+# PART D — MULTIPLE REGRESSION: predictions, changes, point of means
+# =====================================================================
+
+# ---- D1. Predict y-hat  ("y=10+2.5x1+2.3x2 at x1=13, x2=15")  ANSWER: 77
+b <- c(10, 2.5, 2.3)                     # <- b0, b1, b2 (type minus signs!)
+xs <- c(13, 15)                          # <- x1, x2
+r(b[1] + sum(b[-1] * xs))
+
+# ---- D2. Predicted CHANGE  ("y=1+3.1x1-2.3x2, x1 up 5, x2 up 3")  ANSWER: 8.6
+slopes <- c(3.1, -2.3)                   # <- slopes only, NO intercept
+dx <- c(5, 3)                            # <- changes
+r(sum(slopes * dx))
+
+# ---- D3. LOG-LEVEL with several changes: %dy = 100*(b1 dx1 + b2 dx2)
+# PS11 #1: "log(y)=1.4+0.034x1-0.014x2, x1 up 4, x2 up 3"
+slopes <- c(0.034, -0.014); dx <- c(4, 3)  # <- change these
+r(100 * sum(slopes * dx))
+
+# ---- D4. Point of means: y-bar = b0 + b1 x1bar + b2 x2bar ------------
+# PS11 #6: "y=4.1+1.7x1-2.1x2, x1bar=11.8, x2bar=7.1"
+b <- c(4.1, 1.7, -2.1); xbars <- c(11.8, 7.1)   # <- change these
+r(b[1] + sum(b[-1] * xbars))
+
+# ---- D5. DATA: predicted value  (wage1, educ=14, exper=10, tenure=5) ANSWER: 6.58
+reg <- lm(wage ~ educ + exper + tenure, data = wage1)  # <- change
+b <- reg$coefficients; b
+r(b[1] + b[2]*14 + b[3]*10 + b[4]*5)                    # <- change values
+# DATA: change in one variable holding others fixed (tenure +3)  ANSWER: 0.51
+r(b[4] * 3)
+
+# ---- D6. DATA LOG-LEVEL percent change (PS11 #2: exper +2, tenure +1) ---
+reg <- lm(log(wage) ~ educ + exper + tenure, data = wage1)
+b <- reg$coefficients; b
+r(100 * (b[3]*2 + b[4]*1))                              # <- change
+# ceosal1: lm(log(salary) ~ log(sales) + roe), roe +10   ANSWER: 17.87
+reg2 <- lm(log(salary) ~ log(sales) + roe, data = ceosal1)
+r(100 * coef(reg2)[3] * 10)
+
+# ---- D7. DATA: predict y from a LOG(y) model -> exp() -------------------
+# PS11 #3: wage1 log(wage), educ=12, exper=10, tenure=3
+b <- coef(lm(log(wage) ~ educ + exper + tenure, data = wage1))
+r(exp(b[1] + b[2]*12 + b[3]*10 + b[4]*3))               # <- change values
+# ceosal1: log(salary) ~ log(sales) + roe, sales=5000, roe=15   ANSWER: 1067.66
+b <- coef(lm(log(salary) ~ log(sales) + roe, data = ceosal1))
+r(exp(b[1] + b[2]*log(5000) + b[3]*15))
+# (do NOT round before exp())
+
+# ---- D8. DATA: predicted value at the MEANS = mean of y (PS11 #5, gpa1) --
+reg <- lm(colGPA ~ ACT + hsGPA, data = gpa1)
+b <- reg$coefficients
+r(c(at_means = unname(b[1] + b[2]*mean(gpa1$ACT) + b[3]*mean(gpa1$hsGPA)),
+    mean_colGPA = mean(gpa1$colGPA)))
+# Same because the OLS line always passes through the point of means.
+
+# ---- D9. Perfect collinearity check in R (PS11 #8, vote1) ------------
+vote1$totexpend <- vote1$expendA + vote1$expendB
+coef(lm(voteA ~ expendA + expendB + totexpend, data = vote1))
+# totexpend shows NA: R drops it because it is an exact linear function of expendA and expendB.
+
+
+# =====================================================================
+# PART E — OMITTED-VARIABLE BIAS
+#   b~1 = b^1 + b^2 * d~1      (3.23)
+#   b~1 = SIMPLE slope (Y on X1 alone)      b^1 = MULTIPLE slope on X1
+#   b^2 = coef on X2 in multiple reg        d~1 = slope from regressing X2 on X1
+#   Bias(b~1) = beta2 * delta1
+# =====================================================================
+
+# ---- E1. Find SIMPLE slope b~1  ("b^1=0.42, b^2=1.28, d~1=0.39") ANSWER: 0.92
+b1_hat <- 0.42; b2_hat <- 1.28; delta <- 0.39   # <- change these
+r(b1_hat + b2_hat * delta)
+
+# ---- E2. Find MULTIPLE slope b^1  (PS11 #11: "b~1=0.79, b^2=-1.24, d~1=0.49")
+b1_tilde <- 0.79; b2_hat <- -1.24; delta <- 0.49  # <- change these
+r(b1_tilde - b2_hat * delta)
+
+# ---- E3. Bias = beta2 * delta1  ("beta2=-2.17, delta1=-0.45") ANSWER: 0.98
+beta2 <- -2.17; delta1 <- -0.45                 # <- change these
+r(beta2 * delta1)    # positive = biased UP, negative = biased DOWN
+
+# ---- E4. DATA: b^2 * d~1 and check  (wage1: wage on educ, omit exper) ANSWER: -0.1
+long  <- lm(wage ~ educ + exper, data = wage1)   # <- y ~ x1 + x2
+short <- lm(wage ~ educ, data = wage1)           # <- y ~ x1
+aux   <- lm(exper ~ educ, data = wage1)          # <- x2 ~ x1
+r(c(simple_b1 = unname(coef(short)[2]), multiple_b1 = unname(coef(long)[2]),
+    b2 = unname(coef(long)[3]), delta = unname(coef(aux)[2]),
+    b2_times_delta = unname(coef(long)[3] * coef(aux)[2]),
+    check_simple_minus_multiple = unname(coef(short)[2] - coef(long)[2])))
+
+# ---- E5. DATA: bwght (PS11 #12-14): cigs, then add faminc ------------
+short <- lm(bwght ~ cigs, data = bwght)
+long  <- lm(bwght ~ cigs + faminc, data = bwght)
+aux   <- lm(faminc ~ cigs, data = bwght)
+r(c(simple_cigs = unname(coef(short)[2]),          # PS11 #12
+    multiple_cigs = unname(coef(long)[2]),         # PS11 #13
+    b2_times_delta = unname(coef(long)[3] * coef(aux)[2])))  # PS11 #14
+
+# ---- E6. DIRECTION of bias (two-legged table, Table 3.2) -------------
+#                         corr(X1,X2) > 0     corr(X1,X2) < 0
+#   beta2 > 0 (X2 raises Y)   UPWARD           DOWNWARD
+#   beta2 < 0 (X2 lowers Y)   DOWNWARD         UPWARD
+#  Same signs = UP (overstates). Opposite signs = DOWN (understates).
+#  NO bias if beta2 = 0 OR X1 and X2 uncorrelated in the sample (delta1 = 0).
+#  Examples:
+#   - X2 lowers Y, positively correlated with X1        -> biased DOWNWARD (Quiz 10)
+#   - X2 lowers Y, negatively correlated with X1        -> biased UPWARD   (PS11 #16)
+#   - fertilizer/yield, omit land quality (+ effect, + corr) -> UPWARD, overstates (PS11 #17)
+#   - tutoring/scores, omit ability (+ effect, - corr)  -> DOWNWARD, understates (PS11 #18)
+#   - wage on educ, omit ability (+,+) -> upward; ability is the classic OVB variable (Quiz 9)
+#   - bwght: simple -0.51 vs multiple -0.46: about -0.46 per cigarette is the effect holding
+#     income fixed; the other -0.05 is income riding along (smokers have lower income) (PS11 #15)
+
+
+# =====================================================================
+# PART F — MULTIPLE REGRESSION STANDARD ERRORS (Problem Set 12)
+#   df = n - K - 1     (K = number of x's, NOT counting intercept)
+#   sigma-hat = sqrt(SSR / df)
+#   SST_j = (n-1) * S_Xj^2  = sum((xj - mean(xj))^2)
+#   R2_j  = R^2 from regressing X_j on the OTHER x's (Y not involved)
+#   se(b_j) = sigma-hat / sqrt(SST_j * (1 - R2_j))
+# =====================================================================
+
+# ---- F1. sigma-hat  (PS12 #4: K=4, n=34, SSR=1561) -------------------
+K <- 4; n <- 34; SSR <- 1561              # <- change these
+df <- n - K - 1; r(c(df = df, sigma_hat = sqrt(SSR / df)))
+
+# ---- F2. SST_j from n and SD  (PS12 #5: n=52, S=4.3) ------------------
+n <- 52; S <- 4.3                          # <- change (if given variance, S <- sqrt(var))
+r((n - 1) * S^2)
+
+# ---- F3. se(b_j)  (PS12 #6: sigma-hat=11.5, SST_j=329, R2_j=0.34) ----
+sig <- 11.5; SSTj <- 329; R2j <- 0.34      # <- change these
+r(sig / sqrt(SSTj * (1 - R2j)))
+
+# ---- F4. Var(b_j) with true sigma^2 ----------------------------------
+sigma2 <- 80; SSTj <- 17; R2j <- 0         # <- change these
+r(sigma2 / (SSTj * (1 - R2j)))
+
+# ---- F5. se BY HAND FROM DATA, every piece (PS12 #8-13, hprice1, bdrms)
+# Change: the formula, the dataset, xj (the variable you want), and the other x's.
+reg <- lm(price ~ sqrft + bdrms + lotsize, data = hprice1)   # <- change
+xj  <- "bdrms"                                               # <- change
+d   <- model.frame(reg)              # ONLY rows lm() used (handles missing values)
+n   <- nobs(reg); K <- length(coef(reg)) - 1; df <- n - K - 1
+SSR <- sum(reg$residuals^2); sigma_hat <- sqrt(SSR / df)
+SST_j <- sum((d[[xj]] - mean(d[[xj]]))^2)
+R2_j  <- summary(lm(bdrms ~ sqrft + lotsize, data = d))$r.squared  # <- xj ~ OTHER x's
+se_j  <- sigma_hat / sqrt(SST_j * (1 - R2_j))
+r(c(n = n, K = K, df = df, SSR = SSR, sigma_hat = sigma_hat,
+    SST_j = SST_j, R2_j = R2_j, se_by_hand = se_j,
+    se_summary = summary(reg)$coefficients[xj, 2], sigma_summary = summary(reg)$sigma))
+# summary(reg)$coefficients[row, 2]: row 1 = intercept, 2 = first x, 3 = second x ...
+# "Residual standard error ... on 84 degrees of freedom" = sigma-hat, and 84 = df.
+
+
+# =====================================================================
+# PART G — CONCEPT / MULTIPLE-CHOICE ANSWERS
+# =====================================================================
+#
+# --- Interpretation of log models ---
+#  log-level  log(y)=b0+b1x       : 1 unit of x -> 100*b1 % change in y   (%dy = 100 b1 dx)
+#  log-log    log(y)=b0+b1log(x)  : 1% x -> b1 % y  (ELASTICITY)
+#     e.g. log(rent)=2.1+0.45log(income): 1% income -> about 0.45% rent
+#  level-log  y=b0+b1log(x)       : 1% x -> b1/100 units of y
+#     e.g. test=12+8log(income): 1% income -> about 0.08 points
+#  "In which model is %dy = 100*b1*dx?"  -> LOG-LEVEL (not level-level!)
+#  log-log, y in dollars instead of thousands -> b1 does NOT change; only b0 changes
+#  x multiplied by 10 -> slope divided by 10, intercept same, R^2 same
+#
+# --- Unbiasedness / variance (SLR) ---
+#  E[b1-hat] = b1 means: AVERAGED over many random samples b1-hat equals b1
+#     (not every sample; residuals not zero; not only when R^2=1)
+#  1,000 samples, OLS unbiased -> the AVERAGE of the 1,000 estimates is close to b1
+#  Prefer smaller variance because: estimates land closer to b1 from sample to
+#     sample, so any one estimate is more reliable
+#  Var(b1) SMALLER: more spread-out X (larger SST_X), larger sample, smaller sigma^2
+#  Var(b1) LARGER: smaller sample, larger sigma^2, X bunched together. (NOT the size of b1)
+#  Every worker has 12 years of educ -> SLR3 fails: X all the same, slope can't be computed
+#  Spread of y around the line grows with x (food spending/income) -> SLR5
+#     (homoskedasticity) fails: Var formula no longer applies, OLS STILL UNBIASED
+#  Zero conditional mean (test score/class size, family income in U, richer districts
+#     have smaller classes) -> FAILS, because the average of U changes with class size
+#  OLS line = the one with residuals summing to 0 AND smallest sum of squared residuals
+#
+# --- Multiple regression ---
+#  b1 in wage = b0 + b1 educ + b2 exper: change in predicted wage from one more year of
+#     educ, HOLDING EXPER FIXED (ceteris paribus)
+#  Residual facts ALWAYS true (select all):
+#     [x] sample average of residuals is 0
+#     [x] sample covariance between EACH X_j and residuals is 0
+#     [x] regression passes through the point of means
+#     [ ] covariance between Y and residuals is 0   (false: uncorrelated with Y-HAT, not Y)
+#     [ ] every residual 0 when sample large          (false)
+#  MLR3 (no perfect collinearity) VIOLATED (select all):
+#     [x] wage on income in dollars AND income in thousands
+#     [x] voteA on expendA, expendB and totexpend = expendA + expendB
+#     [x] 5 independent variables, 4 observations (need n >= K+1)
+#     [ ] educ and exper both vary                     (fine)
+#     [ ] ACT and hsGPA positively but NOT perfectly correlated  (fine)
+#  R output for totexpend -> "NA: R drops totexpend because it is an exact linear function"
+#  MLR4 fails (endogeneity): a variable that affects Y and is correlated with X1 is
+#     left out (also wrong functional form). NOT: small n, units, high correlation.
+#  Why not add every variable? -> can INCREASE the variance of the OLS estimates and can
+#     even violate MLR3
+#
+# --- Standard errors (PS12) ---
+#  In se(b_j) = sigma-hat / sqrt(SST_j(1-R2_j)), X_j = the independent variable whose
+#     coefficient b_j we want the standard error of
+#  For se(b2) on exper in wage~educ+exper+tenure, R2_j comes from lm(exper ~ educ + tenure)
+#  sigma-hat = sqrt(SSR/(n-K-1)) estimates sigma, the SD of the error U
+#  As R2_j -> 1 (X_j nearly linear in the other x's): se GROWS WITHOUT BOUND (multicollinearity)
+#  summary(reg) "Residual standard error ... on 84 degrees of freedom" matches
+#     Problem 9 (sigma-hat), and its df matches problem 8
+#  Missing data: hand-computed se can differ from summary(reg) because SST_j used rows the
+#     regression dropped -> compute every piece on the same rows the regression used
+#  Gauss-Markov: under MLR1-MLR5 OLS is BLUE; "best" = smallest variance among linear
+#     unbiased estimators
+#
+# --- OVB select-all: "When is there NO omitted-variable bias?" ---
+#     [x] X2 uncorrelated with X1 in the sample (delta1 = 0)
+#     [x] X2 has no ceteris-paribus effect on Y (beta2 = 0)
+#     [ ] large effect + strongly correlated, high R^2, large sample  (no)
+# =====================================================================
