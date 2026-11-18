@@ -1,0 +1,60 @@
+# =====================================================================
+#  PS13 Quiz — Problems #1, #3, #4, #7, #14, #17, #20
+#  Change the numbers marked  <-- CHANGE  to your quiz values,
+#  then run the section (highlight it and press Ctrl/Cmd + Enter).
+# =====================================================================
+
+library(wooldridge)   # first time only: install.packages("wooldridge")
+
+
+# ---------------- #1  (conceptual, no numbers) -----------------------
+# ANSWER: The standard error replaces the unknown sigma with the
+# estimate sigma-hat, which varies from sample to sample.
+
+
+# ---------------- #3  Degrees of freedom -----------------------------
+n <- 152        # <-- CHANGE: number of observations
+K <- 3          # <-- CHANGE: number of independent variables
+
+n - K - 1       # answer
+
+
+# ---------------- #4  t-statistic ------------------------------------
+beta_hat <- 0.87   # <-- CHANGE: estimate
+se       <- 0.83   # <-- CHANGE: standard error
+
+round(beta_hat / se, 2)   # answer
+
+
+# ---------------- #7  One-sided test decision ------------------------
+t <- 1.52   # <-- CHANGE: t-statistic
+c <- 1.71   # <-- CHANGE: critical value
+
+# If H1: beta > 0, use this line:
+t > c       # TRUE = Reject H0 (t > c),  FALSE = Fail to reject H0 (t < c)
+
+# If H1: beta < 0, use this line instead (c will be negative):
+# t < c     # TRUE = Reject H0 (t < c),  FALSE = Fail to reject H0 (t > c)
+
+
+# ---------------- #14  bwght: t-statistic for cigs -------------------
+reg14 <- lm(bwght ~ cigs + faminc, data = bwght)   # <-- CHANGE formula if needed
+s14 <- summary(reg14)$coefficients
+s14                      # shows the full table
+round(s14[2, 3], 2)      # answer: row 2 = cigs, column 3 = t value
+# (row 1 = intercept, then variables in the order they appear in lm())
+
+
+# ---------------- #17  Percent -> decimal rescaling ------------------
+slope <- 0.075   # <-- CHANGE: original slope
+
+round(slope * 100, 2)    # answer if x goes PERCENT -> DECIMAL
+# round(slope / 100, 4)  # use this instead if x goes DECIMAL -> PERCENT
+
+
+# ---------------- #20  hprice1: predicted price ----------------------
+sqft  <- 2000   # <-- CHANGE: square feet
+beds  <- 3      # <-- CHANGE: bedrooms
+
+reg20 <- lm(log(price) ~ log(sqrft) + bdrms, data = hprice1)
+round(exp(predict(reg20, data.frame(sqrft = sqft, bdrms = beds))), 2)   # answer (thousands of $)
